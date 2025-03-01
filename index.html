@@ -92,8 +92,8 @@
             measurementId: "G-FNDPHCFL5T"
         };
 
-        const app = firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+        const app = initializeApp(firebaseConfig);
+        const database = app.database();
 
         async function submitVouch() {
             const userEmail = document.getElementById("userEmail").value.trim();
