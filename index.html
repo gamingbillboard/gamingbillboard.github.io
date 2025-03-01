@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TIFFIN BILLBOARD</title>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -66,7 +66,7 @@
         <p>I, <strong>The H4ck3r</strong>, am still in business, no question.</p>
         <p>Rumors have been spreading that GitHub has been blocked. (spoiler, it has not!)<br>Everything is running smoothly (hopefully).</p>
         <p>Stay tuned for more updates!</p>
-        <p class="footnote"><strong>NOTES:</strong><br>Please bookmark!!!<br>Email <a href="mailto:operation_500@outlook.com?subject=OPT%20ME%20IN?body=OPT%20ME%20IN">operation_500@outlook.com</a> with "OPT ME IN" for live updates.</p>
+        <p class="footnote"><strong>NOTES:</strong><br>Please bookmark!!!<br>Email <a href="mailto:operation_500@outlook.com?subject=OPT%20ME%20IN&body=OPT%20ME%20IN">operation_500@outlook.com</a> with "OPT ME IN" for live updates.</p>
     </div>
     
     <div class="container">
@@ -77,22 +77,27 @@
         <p id="message"></p>
     </div>
     
-    <script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
+
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_AUTH_DOMAIN",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_STORAGE_BUCKET",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
+            apiKey: "AIzaSyAzl506lC0uZALobX3VyThCTST_mVma3Uc",
+            authDomain: "tiffinbillboardemails.firebaseapp.com",
+            databaseURL: "https://tiffinbillboardemails-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "tiffinbillboardemails",
+            storageBucket: "tiffinbillboardemails.firebasestorage.app",
+            messagingSenderId: "895246119864",
+            appId: "1:895246119864:web:6d877834d3ccacced4554d",
+            measurementId: "G-FNDPHCFL5T"
         };
 
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
         async function submitVouch() {
-            const userEmail = document.getElementById("userEmail").value;
-            const friendEmail = document.getElementById("friendEmail").value;
+            const userEmail = document.getElementById("userEmail").value.trim();
+            const friendEmail = document.getElementById("friendEmail").value.trim();
             const message = document.getElementById("message");
 
             if (!userEmail || !friendEmail || userEmail === friendEmail) {
@@ -100,23 +105,23 @@
                 return;
             }
 
-            const userRef = db.collection("users").doc(userEmail);
-            const friendRef = db.collection("users").doc(friendEmail);
-            
-            const userDoc = await userRef.get();
-            if (userDoc.exists && userDoc.data().hasVouched) {
+            const userRef = doc(db, "users", userEmail);
+            const friendRef = doc(db, "users", friendEmail);
+
+            const userDoc = await getDoc(userRef);
+            if (userDoc.exists() && userDoc.data().hasVouched) {
                 message.innerText = "You have already vouched for someone.";
                 return;
             }
-            
-            const friendDoc = await friendRef.get();
-            if (!friendDoc.exists) {
-                await friendRef.set({ vouches: 1 });
+
+            const friendDoc = await getDoc(friendRef);
+            if (!friendDoc.exists()) {
+                await setDoc(friendRef, { vouches: 1 });
             } else {
-                await friendRef.update({ vouches: friendDoc.data().vouches + 1 });
+                await updateDoc(friendRef, { vouches: friendDoc.data().vouches + 1 });
             }
-            
-            await userRef.set({ hasVouched: true });
+
+            await setDoc(userRef, { hasVouched: true });
             message.innerText = "Vouch successful!";
         }
     </script>
