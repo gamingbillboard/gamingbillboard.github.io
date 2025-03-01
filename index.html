@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TIFFIN BILLBOARD</title>
     <script src="https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -55,56 +55,6 @@
             width: 100%;
         }
     </style>
-    
-    
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
-        import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyAzl506lC0uZALobX3VyThCTST_mVma3Uc",
-            authDomain: "tiffinbillboardemails.firebaseapp.com",
-            databaseURL: "https://tiffinbillboardemails-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "tiffinbillboardemails",
-            storageBucket: "tiffinbillboardemails.firebasestorage.app",
-            messagingSenderId: "895246119864",
-            appId: "1:895246119864:web:6d877834d3ccacced4554d",
-            measurementId: "G-FNDPHCFL5T"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        window.submitVouch = async function () {
-            const userEmail = document.getElementById("userEmail").value.trim();
-            const friendEmail = document.getElementById("friendEmail").value.trim();
-            const message = document.getElementById("message");
-
-            if (!userEmail || !friendEmail || userEmail === friendEmail) {
-                message.innerText = "Invalid input. Please check emails.";
-                return;
-            }
-
-            const userRef = doc(db, "users", userEmail);
-            const friendRef = doc(db, "users", friendEmail);
-
-            const userDoc = await getDoc(userRef);
-            if (userDoc.exists() && userDoc.data().hasVouched) {
-                message.innerText = "You have already vouched for someone.";
-                return;
-            }
-
-            const friendDoc = await getDoc(friendRef);
-            if (!friendDoc.exists()) {
-                await setDoc(friendRef, { vouches: 1 });
-            } else {
-                await updateDoc(friendRef, { vouches: friendDoc.data().vouches + 1 });
-            }
-
-            await setDoc(userRef, { hasVouched: true });
-            message.innerText = "Vouch successful!";
-        }
-    </script>
 </head>
 <body>
     <div class="billboard">
@@ -126,5 +76,57 @@
         <button onclick="submitVouch()">Vouch</button>
         <p id="message"></p>
     </div>
+
+    <script>
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAzl506lC0uZALobX3VyThCTST_mVma3Uc",
+            authDomain: "tiffinbillboardemails.firebaseapp.com",
+            databaseURL: "https://tiffinbillboardemails-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "tiffinbillboardemails",
+            storageBucket: "tiffinbillboardemails.firebasestorage.app",
+            messagingSenderId: "895246119864",
+            appId: "1:895246119864:web:6d877834d3ccacced4554d",
+            measurementId: "G-FNDPHCFL5T"
+        };
+
+        const app = firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        async function submitVouch() {
+            const userEmail = document.getElementById("userEmail").value.trim();
+            const friendEmail = document.getElementById("friendEmail").value.trim();
+            const message = document.getElementById("message");
+
+            if (!userEmail || !friendEmail || userEmail === friendEmail) {
+                message.innerText = "Invalid input. Please check emails.";
+                return;
+            }
+
+            // Reference to the users in the Realtime Database
+            const userRef = database.ref("users/" + userEmail.replace(".", "_"));
+            const friendRef = database.ref("users/" + friendEmail.replace(".", "_"));
+
+            userRef.once("value").then((snapshot) => {
+                if (snapshot.exists() && snapshot.val().hasVouched) {
+                    message.innerText = "You have already vouched for someone.";
+                    return;
+                }
+
+                friendRef.once("value").then((friendSnapshot) => {
+                    if (!friendSnapshot.exists()) {
+                        friendRef.set({ vouches: 1 });
+                    } else {
+                        const currentVouches = friendSnapshot.val().vouches || 0;
+                        friendRef.update({ vouches: currentVouches + 1 });
+                    }
+
+                    userRef.set({ hasVouched: true });
+
+                    message.innerText = "Vouch successful!";
+                });
+            });
+        }
+    </script>
 </body>
 </html>
