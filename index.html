@@ -58,7 +58,7 @@
 </head>
 <body>
     <div class="billboard">
-        <p>For games (monkeygg2 + proxy), please visit:<br>
+        <p>For games (just monkeygg2, proxy aint working, im fixing it), please visit:<br>
         <a href="https://schoolgamin.github.io/mathematics/" target="_blank">schoolgamin.github.io/mathematics</a></p>
         <p>For minecraft:<br>
         <a href="resent.html" download>Click me - Download</a></p>
@@ -103,7 +103,6 @@
                 return;
             }
 
-            // Reference to the users in the Realtime Database
             const userRef = database.ref("users/" + userEmail.replace(".", "_"));
             const friendRef = database.ref("users/" + friendEmail.replace(".", "_"));
 
